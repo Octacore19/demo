@@ -1,0 +1,8 @@
+auth0:
+  audience: http://players.demo/
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://dev-octacore.us.auth0.com/
