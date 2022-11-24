@@ -9,12 +9,14 @@ import org.springframework.stereotype.Service
 
 
 @Service
-class AuthService(private val repo: UserRepository) : UserDetailsService {
+class AuthService(
+    private val repo: UserRepository,
+) : UserDetailsService {
 
     @Throws(UsernameNotFoundException::class)
     override fun loadUserByUsername(username: String?): UserDetails {
-        val user = repo.findByUsername(username)
-        return if (user != null) User(user.username, "", arrayListOf())
+        val user = repo.findByEmail(username)
+        return if (user != null) User(user.email, user.password, arrayListOf())
         else throw UsernameNotFoundException("User not found with username: $username")
     }
 }

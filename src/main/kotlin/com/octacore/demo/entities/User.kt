@@ -6,10 +6,8 @@ import javax.persistence.*
 @Table(name = "users")
 data class User(
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    val id: Long = 0,
-    val firstName: String,
-    val lastName: String,
     val email: String,
-    val password: String,
+    var password: String,
+    val firstName: String?,
+    val lastName: String?,
 )
