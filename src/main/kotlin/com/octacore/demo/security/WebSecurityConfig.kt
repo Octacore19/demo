@@ -16,13 +16,21 @@ import org.springframework.security.web.SecurityFilterChain
 import java.util.*
 
 @EnableWebSecurity
-class WebSecurityConfig {
-
+class WebSecurityConfig(
     @Value("\${auth0.audience}")
-    private val audience: String = String()
-
+    private val audience: String,
     @Value("\${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
-    private val issuer: String = String()
+    private val issuer: String
+) {
+    @Bean
+    @Throws(Exception::class)
+    fun filterChain(http: HttpSecurity): SecurityFilterChain {
+        http.authorizeRequests()
+            .anyRequest().authenticated()
+            .and()
+            .oauth2ResourceServer().jwt()
+        return http.build()
+    }
 
     @Bean
     fun jwtDecoder(): JwtDecoder {
@@ -32,15 +40,5 @@ class WebSecurityConfig {
         val withAudience: OAuth2TokenValidator<Jwt> = DelegatingOAuth2TokenValidator(withIssuer, audienceValidator)
         jwtDecoder.setJwtValidator(withAudience)
         return jwtDecoder
-    }
-
-    @Bean
-    @Throws(Exception::class)
-    fun filterChain(http: HttpSecurity): SecurityFilterChain {
-        http.authorizeRequests()
-            .anyRequest().authenticated()
-            .and()
-            .oauth2ResourceServer().jwt()
-        return http.build()
     }
 }

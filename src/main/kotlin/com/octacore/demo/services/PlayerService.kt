@@ -1,6 +1,6 @@
 package com.octacore.demo.services
 
-import com.octacore.demo.model.Player
+import com.octacore.demo.entities.Player
 import com.octacore.demo.repo.PlayerRepository
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus

@@ -1,4 +1,4 @@
-package com.octacore.demo.model
+package com.octacore.demo.entities
 
 import javax.persistence.*
 

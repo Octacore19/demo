@@ -1,9 +1,8 @@
 package com.octacore.demo.controller
 
-import com.octacore.demo.model.Player
+import com.octacore.demo.entities.Player
 import com.octacore.demo.services.PlayerService
 import org.springframework.http.HttpStatus
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 
 @RequestMapping("api/v1/players")
