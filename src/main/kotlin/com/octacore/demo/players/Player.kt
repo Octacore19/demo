@@ -1,4 +1,4 @@
-package com.octacore.demo.entities
+package com.octacore.demo.players
 
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue

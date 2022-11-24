@@ -1,7 +1,7 @@
-package com.octacore.demo.services
+package com.octacore.demo.players
 
-import com.octacore.demo.entities.Player
-import com.octacore.demo.repo.PlayerRepository
+import com.octacore.demo.players.Player
+import com.octacore.demo.players.PlayerRepository
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service

@@ -1,6 +1,5 @@
-package com.octacore.demo.repo
+package com.octacore.demo.players
 
-import com.octacore.demo.entities.Player
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 

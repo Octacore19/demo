@@ -1,7 +1,5 @@
-package com.octacore.demo.controller
+package com.octacore.demo.players
 
-import com.octacore.demo.entities.Player
-import com.octacore.demo.services.PlayerService
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
 

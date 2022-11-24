@@ -1,31 +1,35 @@
 package com.octacore.demo.security
 
-import org.springframework.beans.factory.annotation.Value
+import com.octacore.demo.user.UserRepository
+import com.octacore.demo.user.UserService
 import org.springframework.context.annotation.Bean
+import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.AuthenticationManager
+import org.springframework.security.config.Customizer
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
+import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
-import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator
-import org.springframework.security.oauth2.core.OAuth2TokenValidator
 import org.springframework.security.oauth2.jwt.*
 import org.springframework.security.web.SecurityFilterChain
+import java.security.interfaces.RSAPublicKey
 import java.util.*
 
 @EnableWebSecurity
 class WebSecurityConfig(
-    @Value("\${auth0.audience}")
-    private val audience: String,
-    @Value("\${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
-    private val issuer: String
+    private val rsaPublicKey: RSAPublicKey,
 ) {
     @Bean
     @Throws(Exception::class)
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
-        http.authorizeRequests()
+        http.cors().and().csrf().disable()
+            .httpBasic(Customizer.withDefaults())
+            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .and().authorizeRequests()
+            .antMatchers(HttpMethod.POST, "/auth/v1/**").permitAll()
             .anyRequest().authenticated()
             .and()
             .oauth2ResourceServer().jwt()
@@ -33,13 +37,8 @@ class WebSecurityConfig(
     }
 
     @Bean
-    fun jwtDecoder(): JwtDecoder {
-        val jwtDecoder = JwtDecoders.fromOidcIssuerLocation(issuer) as NimbusJwtDecoder
-        val audienceValidator: OAuth2TokenValidator<Jwt> = AudienceValidator(audience)
-        val withIssuer: OAuth2TokenValidator<Jwt> = JwtValidators.createDefaultWithIssuer(issuer)
-        val withAudience: OAuth2TokenValidator<Jwt> = DelegatingOAuth2TokenValidator(withIssuer, audienceValidator)
-        jwtDecoder.setJwtValidator(withAudience)
-        return jwtDecoder
+    fun jwtDecoderBean(): JwtDecoder {
+        return NimbusJwtDecoder.withPublicKey(rsaPublicKey).build()
     }
 
     @Bean
@@ -48,7 +47,12 @@ class WebSecurityConfig(
         authenticationManagerBuilder.userDetailsService(userDetailsService)
         return authenticationManagerBuilder.build()
     }
-    
+
     @Bean
     fun passwordEncoderBean(): PasswordEncoder = BCryptPasswordEncoder()
+
+    /*@Bean
+    fun users(userRepository: UserRepository): UserDetailsService {
+        return UserService(userRepository)
+    }*/
 }

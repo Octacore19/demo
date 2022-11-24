@@ -1,10 +1,11 @@
-package com.octacore.demo.repo
+package com.octacore.demo.user
 
-import com.octacore.demo.entities.User
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 
 @Repository
 interface UserRepository: JpaRepository<User, Long> {
     fun findByEmail(email: String?): User?
+
+    fun findByUsername(username: String): User?
 }
