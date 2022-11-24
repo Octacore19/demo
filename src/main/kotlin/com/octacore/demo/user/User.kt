@@ -1,7 +1,11 @@
 package com.octacore.demo.user
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import org.hibernate.Hibernate
+import org.hibernate.annotations.OnDelete
+import org.hibernate.annotations.OnDeleteAction
 import org.springframework.security.core.GrantedAuthority
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import javax.persistence.*
 
@@ -11,13 +15,15 @@ data class User(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
-    val email: String?,
-    val firstName: String?,
-    val lastName: String?,
+    val email: String? = null,
+    val firstName: String? = null,
+    val lastName: String? = null,
     private val username: String,
-    private var password: String,
-    @Transient
-    private val authorities: MutableCollection<GrantedAuthority>?,
+    private val password: String,
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
+    @JsonIgnore
+    private val authorities: MutableCollection<UserGrantedAuthority>? = null
 ) : UserDetails {
     override fun getAuthorities(): MutableCollection<out GrantedAuthority>? = authorities
 
@@ -45,7 +51,6 @@ data class User(
 
     @Override
     override fun toString(): String {
-        return this::class.simpleName + "(id = $id , email = $email , firstName = $firstName , lastName = $lastName , username = $username , password = $password , authorities = $authorities )"
+        return this::class.simpleName + "(id = $id , email = $email , firstName = $firstName , lastName = $lastName , username = $username , password = $password, authorities = $authorities )"
     }
-
 }

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component
 @Component
 class UserService(
     private val repo: UserRepository,
+    private val authRepo: UserAuthorityRepo,
     private val encoder: PasswordEncoder,
 ) : UserManager {
 
@@ -26,6 +27,7 @@ class UserService(
         }
         val nUser = user.copy(password = encoder.encode(user.password))
         repo.save(nUser)
+        authRepo.save(UserGrantedAuthority(role = "USER", user = nUser))
     }
 
     @Throws(UsernameNotFoundException::class)

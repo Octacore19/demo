@@ -4,7 +4,6 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.octacore.demo.base.BaseResponse
 import com.octacore.demo.user.User
-import com.octacore.demo.user.UserRepository
 import com.octacore.demo.user.UserService
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
@@ -16,7 +15,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.core.userdetails.UsernameNotFoundException
-import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.web.bind.annotation.*
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
@@ -27,8 +25,6 @@ import java.util.stream.Collectors
 @RestController
 class AuthController(
     private val authManager: AuthenticationManager,
-    private val userRepo: UserRepository,
-    private val pEncoder: PasswordEncoder,
     private val rsaPublicKey: RSAPublicKey,
     private val rsaPrivateKey: RSAPrivateKey,
     @Value("\${auth0.audience}")
@@ -40,12 +36,12 @@ class AuthController(
 
     @PostMapping("/login", consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE])
     fun login(
-        @RequestParam email: String,
+        @RequestParam username: String,
         @RequestParam password: String
     ): ResponseEntity<LoginResponse> {
         try {
             val context = SecurityContextHolder.createEmptyContext()
-            val a = UsernamePasswordAuthenticationToken(email, password)
+            val a = UsernamePasswordAuthenticationToken(username, password)
             val auth = authManager.authenticate(a)
             context.authentication = auth
             SecurityContextHolder.setContext(context)
@@ -59,7 +55,7 @@ class AuthController(
                 .withIssuer(issuer)
                 .withSubject(auth.name)
                 .withIssuedAt(Date())
-                .withClaim("scope", scope)
+                .withClaim("scp", scope)
                 .withExpiresAt(Date(System.currentTimeMillis() + (60 * 60 * 2)))
                 .sign(Algorithm.RSA256(rsaPublicKey, rsaPrivateKey))
             return ResponseEntity.ok().body(LoginResponse(access_token = token, expires_at = 0, grant_type = "Bearer"))
@@ -72,11 +68,15 @@ class AuthController(
         }
     }
 
-    @PostMapping("/signup")
-    fun createNewUser(@RequestBody user: User): ResponseEntity<BaseResponse<*>> {
+    @PostMapping("/signup", consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE])
+    fun createNewUser(
+        @RequestParam username: String,
+        @RequestParam password: String,
+    ): ResponseEntity<BaseResponse<Any>> {
         return try {
-            authService.createUser(user)
-            ResponseEntity.ok().body(null)
+            authService.createUser(User(username = username, password = password))
+            val res = BaseResponse<Any>(status = true, message = "User created successfully")
+            ResponseEntity(res, HttpStatus.CREATED)
         } catch (e: Exception) {
             val res = BaseResponse<Any>(status = false, message = e.localizedMessage)
             ResponseEntity(res, HttpStatus.BAD_REQUEST)

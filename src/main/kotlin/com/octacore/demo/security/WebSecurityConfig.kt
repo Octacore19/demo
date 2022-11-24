@@ -1,7 +1,6 @@
 package com.octacore.demo.security
 
-import com.octacore.demo.user.UserRepository
-import com.octacore.demo.user.UserService
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.AuthenticationManager
@@ -13,6 +12,8 @@ import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator
+import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm
 import org.springframework.security.oauth2.jwt.*
 import org.springframework.security.web.SecurityFilterChain
 import java.security.interfaces.RSAPublicKey
@@ -21,6 +22,9 @@ import java.util.*
 @EnableWebSecurity
 class WebSecurityConfig(
     private val rsaPublicKey: RSAPublicKey,
+
+    @Value("\${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
+    private val issuerUri: String,
 ) {
     @Bean
     @Throws(Exception::class)
@@ -37,8 +41,14 @@ class WebSecurityConfig(
     }
 
     @Bean
-    fun jwtDecoderBean(): JwtDecoder {
-        return NimbusJwtDecoder.withPublicKey(rsaPublicKey).build()
+    fun jwtDecoderBean(audValidator: AudienceValidator): JwtDecoder {
+        return NimbusJwtDecoder
+            .withPublicKey(rsaPublicKey)
+            .build().apply {
+                val withIssuer = JwtValidators.createDefaultWithIssuer(issuerUri)
+                val withAud = DelegatingOAuth2TokenValidator(withIssuer, audValidator)
+                setJwtValidator(withAud)
+            }
     }
 
     @Bean
@@ -50,9 +60,4 @@ class WebSecurityConfig(
 
     @Bean
     fun passwordEncoderBean(): PasswordEncoder = BCryptPasswordEncoder()
-
-    /*@Bean
-    fun users(userRepository: UserRepository): UserDetailsService {
-        return UserService(userRepository)
-    }*/
 }
