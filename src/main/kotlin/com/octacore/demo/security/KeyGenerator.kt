@@ -8,7 +8,7 @@ import java.security.interfaces.RSAPublicKey
 import java.security.spec.RSAKeyGenParameterSpec
 
 @Component
-class KeyGenerator private constructor() {
+class KeyGenerator {
 
     private val keyPair: KeyPair
 
