@@ -6,4 +6,3 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: https://dev-octacore.us.auth0.com/
-          jwk-set-uri: https://dev-octacore.us.auth0.com/.well-known/jwks.json

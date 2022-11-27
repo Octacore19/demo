@@ -18,6 +18,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.web.bind.annotation.*
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
+import java.time.Instant
 import java.util.*
 import java.util.stream.Collectors
 
@@ -38,13 +39,17 @@ class AuthController(
     fun login(
         @RequestParam username: String,
         @RequestParam password: String
-    ): ResponseEntity<LoginResponse> {
+    ): ResponseEntity<*> {
         try {
             val context = SecurityContextHolder.createEmptyContext()
             val a = UsernamePasswordAuthenticationToken(username, password)
             val auth = authManager.authenticate(a)
             context.authentication = auth
             SecurityContextHolder.setContext(context)
+
+            val currentTime = Instant.now()
+            val exp = currentTime.plusSeconds(60 * 60 * 2)
+            val timeDiff = exp.epochSecond - currentTime.epochSecond
 
             val scope = auth.authorities.stream()
                 .map(GrantedAuthority::getAuthority)
@@ -54,17 +59,41 @@ class AuthController(
                 .withAudience(audience)
                 .withIssuer(issuer)
                 .withSubject(auth.name)
-                .withIssuedAt(Date())
+                .withIssuedAt(currentTime)
                 .withClaim("scp", scope)
-                .withExpiresAt(Date(System.currentTimeMillis() + (60 * 60 * 2)))
+                .withExpiresAt(exp)
                 .sign(Algorithm.RSA256(rsaPublicKey, rsaPrivateKey))
-            return ResponseEntity.ok().body(LoginResponse(access_token = token, expires_at = 0, grant_type = "Bearer"))
+            return ResponseEntity.ok().body(
+                LoginResponse(
+                    access_token = token,
+                    expires_at = timeDiff,
+                    grant_type = "Bearer"
+                )
+            )
         } catch (e: UsernameNotFoundException) {
-            return ResponseEntity.notFound().build()
+            return ResponseEntity<Any>(
+                BaseResponse<Any>(
+                    status = false,
+                    message = e.localizedMessage,
+                    code = HttpStatus.NOT_FOUND.value()
+                ), HttpStatus.NOT_FOUND
+            )
         } catch (e: BadCredentialsException) {
-            return ResponseEntity.notFound().build()
+            return ResponseEntity<Any>(
+                BaseResponse<Any>(
+                    status = false,
+                    message = e.localizedMessage,
+                    code = HttpStatus.NOT_FOUND.value()
+                ), HttpStatus.NOT_FOUND
+            )
         } catch (e: Exception) {
-            return ResponseEntity(null, HttpStatus.BAD_REQUEST)
+            return ResponseEntity(
+                BaseResponse<Any>(
+                    status = false,
+                    message = e.localizedMessage,
+                    code = HttpStatus.BAD_REQUEST.value()
+                ), HttpStatus.BAD_REQUEST
+            )
         }
     }
 
@@ -75,10 +104,18 @@ class AuthController(
     ): ResponseEntity<BaseResponse<Any>> {
         return try {
             authService.createUser(User(username = username, password = password))
-            val res = BaseResponse<Any>(status = true, message = "User created successfully")
+            val res = BaseResponse<Any>(
+                status = true,
+                message = "User created successfully",
+                code = HttpStatus.CREATED.value()
+            )
             ResponseEntity(res, HttpStatus.CREATED)
         } catch (e: Exception) {
-            val res = BaseResponse<Any>(status = false, message = e.localizedMessage)
+            val res = BaseResponse<Any>(
+                status = false,
+                message = e.localizedMessage,
+                code = HttpStatus.BAD_REQUEST.value()
+            )
             ResponseEntity(res, HttpStatus.BAD_REQUEST)
         }
     }

@@ -1,23 +1,39 @@
 version: '3.1'
 
 services:
-  db:
+  demo_db:
+    container_name: demo-db
     image: mysql
     command: --default-authentication-plugin=mysql_native_password
-    restart: always
+    restart: on-failure
     environment:
       MYSQL_ROOT_PASSWORD: '@Bound4chegs'
+      MYSQL_DATABASE: players_db
     ports:
       - "3306:3306"
     expose:
       - "3306"
     volumes:
-      - my-db:/var/lib/mysql
-  adminer:
-    image: adminer
-    restart: always
+      - db:/var/lib/mysql
+
+#  demo_adminer:
+#    container_name: demo-admin
+#    image: adminer
+#    restart: on-failure
+#    ports:
+#      - "9090:8080"
+
+  demo_app:
+    container_name: demo-app
+    image: demo-app
+    build: .
     ports:
-      - "9090:8080"
+      - "8080:8080"
+    restart: on-failure
+    depends_on:
+      - demo_db
+    environment:
+      MYSQL_HOST: demo-db
 
 volumes:
-  my-db:
+  db:
