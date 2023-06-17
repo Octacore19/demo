@@ -2,10 +2,7 @@ package com.octacore.demo.user
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import org.hibernate.Hibernate
-import org.hibernate.annotations.OnDelete
-import org.hibernate.annotations.OnDeleteAction
 import org.springframework.security.core.GrantedAuthority
-import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import javax.persistence.*
 
